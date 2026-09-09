@@ -43,6 +43,12 @@ function renderEquipment() {
     return;
   }
 
+  const canManage = currentRole === "officer";
+  const actionsCell = canManage
+    ? `<button class="btn btn-outline btn-sm" onclick="editEquipment(${e.id})">Edit</button>
+       <button class="btn btn-red btn-sm" onclick="deleteEquipment(${e.id})">Delete</button>`
+    : `<span class="muted text-sm">—</span>`;
+
   document.getElementById("table-wrap").style.display = "block";
   tbody.innerHTML = rows
     .map(
@@ -54,8 +60,7 @@ function renderEquipment() {
         <td>${escapeHtml(e.condition)}</td>
         <td>${statusBadge(e.availability)}</td>
         <td style="text-align:right;">
-          <button class="btn btn-outline btn-sm" onclick="editEquipment(${e.id})">Edit</button>
-          <button class="btn btn-red btn-sm" onclick="deleteEquipment(${e.id})">Delete</button>
+          ${actionsCell}
         </td>
       </tr>`
     )
@@ -103,6 +108,11 @@ function editEquipment(id) {
 
 async function saveEquipment(e) {
   e.preventDefault();
+
+  if (currentRole !== "officer") {
+    showToast("Only officers can add or edit equipment.", "error");
+    return;
+  }
 
   const id = document.getElementById("equipment-id").value;
   const payload = {
@@ -156,6 +166,10 @@ async function saveEquipment(e) {
 document.getElementById("equipment-form").addEventListener("submit", saveEquipment);
 
 async function deleteEquipment(id) {
+  if (currentRole !== "officer") {
+    showToast("Only officers can delete equipment.", "error");
+    return;
+  }
   const rec = allEquipment.find((e) => e.id === id);
   // BR-10: deletion requires confirmation
   if (!confirm(`Delete "${rec.asset_code} - ${rec.equipment_name}"?\nThis cannot be undone.`)) return;
@@ -184,6 +198,11 @@ async function deleteEquipment(id) {
   const session = await requireAuth();
   if (!session) return;
   renderShell("Equipment");
+  await loadProfile();
+  if (currentRole !== "officer") {
+    const btn = document.getElementById("btn-add");
+    if (btn) btn.style.display = "none";
+  }
   await loadEquipment();
   populateCategoryFilter();
 })();

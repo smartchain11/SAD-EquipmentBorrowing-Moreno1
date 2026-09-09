@@ -64,12 +64,29 @@ DROP POLICY IF EXISTS "txn_delete_authed"        ON public.borrow_transactions;
 
 CREATE POLICY "equipment_select_authed" ON public.equipment FOR SELECT
   TO authenticated USING (true);
-CREATE POLICY "equipment_insert_authed" ON public.equipment FOR INSERT
-  TO authenticated WITH CHECK (true);
-CREATE POLICY "equipment_update_authed" ON public.equipment FOR UPDATE
-  TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "equipment_delete_authed" ON public.equipment FOR DELETE
-  TO authenticated USING (true);
+-- Only Officers can insert / update / delete equipment (Borrowers view only).
+DROP POLICY IF EXISTS "equipment_insert_officer" ON public.equipment;
+DROP POLICY IF EXISTS "equipment_update_officer" ON public.equipment;
+DROP POLICY IF EXISTS "equipment_delete_officer" ON public.equipment;
+
+CREATE POLICY "equipment_insert_officer" ON public.equipment FOR INSERT
+  TO authenticated
+  WITH CHECK (EXISTS (
+    SELECT 1 FROM public.profiles p WHERE p.id = auth.uid() AND p.role = 'officer'
+  ));
+CREATE POLICY "equipment_update_officer" ON public.equipment FOR UPDATE
+  TO authenticated
+  USING (EXISTS (
+    SELECT 1 FROM public.profiles p WHERE p.id = auth.uid() AND p.role = 'officer'
+  ))
+  WITH CHECK (EXISTS (
+    SELECT 1 FROM public.profiles p WHERE p.id = auth.uid() AND p.role = 'officer'
+  ));
+CREATE POLICY "equipment_delete_officer" ON public.equipment FOR DELETE
+  TO authenticated
+  USING (EXISTS (
+    SELECT 1 FROM public.profiles p WHERE p.id = auth.uid() AND p.role = 'officer'
+  ));
 
 CREATE POLICY "txn_select_authed" ON public.borrow_transactions FOR SELECT
   TO authenticated USING (true);
@@ -110,11 +127,19 @@ GRANT SELECT, INSERT, UPDATE ON public.profiles TO authenticated;
 CREATE OR REPLACE FUNCTION public.approve_borrow(p_txn_id BIGINT)
 RETURNS VOID
 LANGUAGE plpgsql
-SECURITY INVOKER
+SECURITY DEFINER
 SET search_path = public
 AS $$
 DECLARE v_equipment_id BIGINT;
 BEGIN
+  -- Role check: only Officers may approve borrow requests
+  IF NOT EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE id = auth.uid() AND role = 'officer'
+  ) THEN
+    RAISE EXCEPTION 'Only officers can approve borrow requests.';
+  END IF;
+
   -- Only a Pending request can be approved (BR-07)
   IF NOT EXISTS (
     SELECT 1 FROM public.borrow_transactions
@@ -145,7 +170,7 @@ CREATE OR REPLACE FUNCTION public.record_borrow(
   p_due_date DATE
 ) RETURNS BIGINT
 LANGUAGE plpgsql
-SECURITY INVOKER
+SECURITY DEFINER
 SET search_path = public
 AS $$
 DECLARE v_id BIGINT;
@@ -179,7 +204,7 @@ $$;
 CREATE OR REPLACE FUNCTION public.return_equipment(p_txn_id BIGINT)
 RETURNS VOID
 LANGUAGE plpgsql
-SECURITY INVOKER
+SECURITY DEFINER
 SET search_path = public
 AS $$
 DECLARE v_equipment_id BIGINT;
