@@ -43,21 +43,20 @@ function renderEquipment() {
     return;
   }
 
-  const canManage = currentRole === "officer";
-  let actionsCell;
-  if (canManage) {
-    actionsCell = `<button class="btn btn-outline btn-sm" onclick="editEquipment(${e.id})">Edit</button>
-       <button class="btn btn-red btn-sm" onclick="deleteEquipment(${e.id})">Delete</button>`;
-  } else if (e.availability === "Available") {
-    actionsCell = `<button class="btn btn-sm" onclick="openRequestModal(${e.id})">Request</button>`;
-  } else {
-    actionsCell = `<span class="muted text-sm">—</span>`;
-  }
-
   document.getElementById("table-wrap").style.display = "block";
   tbody.innerHTML = rows
-    .map(
-      (e) => `
+    .map((e) => {
+      const canManage = currentRole === "officer";
+      let actionsCell;
+      if (canManage) {
+        actionsCell = `<button class="btn btn-outline btn-sm" onclick="editEquipment(${e.id})">Edit</button>
+           <button class="btn btn-red btn-sm" onclick="deleteEquipment(${e.id})">Delete</button>`;
+      } else if (e.availability === "Available") {
+        actionsCell = `<button class="btn btn-sm" onclick="openRequestModal(${e.id})">Request</button>`;
+      } else {
+        actionsCell = `<span class="muted text-sm">—</span>`;
+      }
+      return `
       <tr>
         <td><strong>${escapeHtml(e.asset_code)}</strong></td>
         <td>${escapeHtml(e.equipment_name)}</td>
@@ -67,8 +66,8 @@ function renderEquipment() {
         <td style="text-align:right;">
           ${actionsCell}
         </td>
-      </tr>`
-    )
+      </tr>`;
+    })
     .join("");
 }
 
