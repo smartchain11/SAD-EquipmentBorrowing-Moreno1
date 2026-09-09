@@ -73,6 +73,18 @@ signupForm.addEventListener("submit", async (e) => {
     showToast(error.message, "error");
     return;
   }
+
+  // Save the role (borrower / officer) into the profiles table
+  if (data.user) {
+    const { error: profErr } = await SUPABASE.from("profiles").insert({
+      id: data.user.id,
+      role: document.getElementById("su-role").value,
+    });
+    if (profErr) {
+      showToast("Signed up, but profile could not be saved: " + profErr.message, "error");
+    }
+  }
+
   if (data.session) {
     sessionStorage.setItem("system_notice", "Account created successfully! Welcome!");
     window.location.href = "dashboard.html";

@@ -28,8 +28,8 @@ CREATE TABLE IF NOT EXISTS public.borrow_transactions (
   date_borrowed DATE NOT NULL DEFAULT CURRENT_DATE,
   due_date      DATE NOT NULL,
   date_returned DATE,
-  status        TEXT NOT NULL DEFAULT 'Borrowed'
-                CHECK (status IN ('Borrowed', 'Returned', 'Overdue')),
+  status        TEXT NOT NULL DEFAULT 'Pending'
+                CHECK (status IN ('Pending', 'Borrowed', 'Returned', 'Overdue')),
   user_id       UUID REFERENCES auth.users(id) ON DELETE SET NULL,
   created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   CONSTRAINT due_date_not_before_borrow CHECK (due_date >= date_borrowed)
@@ -41,6 +41,12 @@ CREATE INDEX IF NOT EXISTS idx_equipment_avail  ON public.equipment (availabilit
 CREATE INDEX IF NOT EXISTS idx_txn_borrower     ON public.borrow_transactions (borrower_name);
 CREATE INDEX IF NOT EXISTS idx_txn_status       ON public.borrow_transactions (status);
 CREATE INDEX IF NOT EXISTS idx_txn_equipment    ON public.borrow_transactions (equipment_id);
+
+-- Allow the Pending status even when the table already exists
+ALTER TABLE public.borrow_transactions DROP CONSTRAINT IF EXISTS borrow_transactions_status_check;
+ALTER TABLE public.borrow_transactions
+  ADD CONSTRAINT borrow_transactions_status_check
+  CHECK (status IN ('Pending', 'Borrowed', 'Returned', 'Overdue'));
 
 -- ---------- ROW LEVEL SECURITY ----------
 ALTER TABLE public.equipment           ENABLE ROW LEVEL SECURITY;
@@ -77,6 +83,56 @@ CREATE POLICY "txn_delete_authed" ON public.borrow_transactions FOR DELETE
 -- Row-level trigger policy helper for RLS: store the logged-in user
 -- (The application already sets user_id = auth.uid() on INSERT.)
 
+-- ---------- PROFILES / ROLES (Borrower vs. Officer) ----------
+CREATE TABLE IF NOT EXISTS public.profiles (
+  id         UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  role       TEXT NOT NULL DEFAULT 'borrower'
+             CHECK (role IN ('borrower', 'officer')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "profiles_select_authed" ON public.profiles;
+DROP POLICY IF EXISTS "profiles_insert_own"   ON public.profiles;
+DROP POLICY IF EXISTS "profiles_update_own"   ON public.profiles;
+
+CREATE POLICY "profiles_select_authed" ON public.profiles FOR SELECT
+  TO authenticated USING (true);
+CREATE POLICY "profiles_insert_own" ON public.profiles FOR INSERT
+  TO authenticated WITH CHECK (auth.uid() = id);
+CREATE POLICY "profiles_update_own" ON public.profiles FOR UPDATE
+  TO authenticated USING (auth.uid() = id) WITH CHECK (auth.uid() = id);
+
+GRANT SELECT, INSERT, UPDATE ON public.profiles TO authenticated;
+
+-- ---------- APPROVE borrowing (Officer) ----------
+CREATE OR REPLACE FUNCTION public.approve_borrow(p_txn_id BIGINT)
+RETURNS VOID
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path = public
+AS $$
+DECLARE v_equipment_id BIGINT;
+BEGIN
+  -- Only a Pending request can be approved (BR-07)
+  IF NOT EXISTS (
+    SELECT 1 FROM public.borrow_transactions
+    WHERE id = p_txn_id AND status = 'Pending'
+  ) THEN
+    RAISE EXCEPTION 'Only pending borrow requests can be approved.';
+  END IF;
+
+  SELECT equipment_id INTO v_equipment_id
+  FROM public.borrow_transactions WHERE id = p_txn_id;
+
+  UPDATE public.borrow_transactions SET status = 'Borrowed' WHERE id = p_txn_id;
+
+  -- BR-07: Borrowed equipment becomes unavailable.
+  UPDATE public.equipment SET availability = 'Borrowed' WHERE id = v_equipment_id;
+END;
+$$;
+
 -- ---------- Atomic business-logic functions ----------
 
 -- Records a borrowing transaction (BR-03, BR-05, BR-06, BR-07)
@@ -107,15 +163,13 @@ BEGIN
     RAISE EXCEPTION 'BR-05: Due date cannot be earlier than the borrowing date.';
   END IF;
 
-  -- Insert transaction with Borrowed status (BR-06)
+  -- Insert transaction with Pending status (BR-06). Equipment stays
+  -- Available until an Officer approves the request (approve_borrow).
   INSERT INTO public.borrow_transactions
-    (equipment_id, borrower_name, borrower_type, department, date_borrowed, due_date, user_id)
+    (equipment_id, borrower_name, borrower_type, department, date_borrowed, due_date, status, user_id)
   VALUES
-    (p_equipment_id, p_borrower_name, p_borrower_type, p_department, p_date_borrowed, p_due_date, auth.uid())
+    (p_equipment_id, p_borrower_name, p_borrower_type, p_department, p_date_borrowed, p_due_date, 'Pending', auth.uid())
   RETURNING id INTO v_id;
-
-  -- BR-07: Borrowed equipment becomes unavailable.
-  UPDATE public.equipment SET availability = 'Borrowed' WHERE id = p_equipment_id;
 
   RETURN v_id;
 END;
@@ -130,12 +184,12 @@ SET search_path = public
 AS $$
 DECLARE v_equipment_id BIGINT;
 BEGIN
-  -- BR-12: A returned transaction cannot be returned a second time.
+  -- BR-12: Only approved transactions (Borrowed/Overdue) can be returned.
   IF NOT EXISTS (
     SELECT 1 FROM public.borrow_transactions
-    WHERE id = p_txn_id AND status <> 'Returned'
+    WHERE id = p_txn_id AND status IN ('Borrowed', 'Overdue')
   ) THEN
-    RAISE EXCEPTION 'BR-12: A returned transaction cannot be returned a second time.';
+    RAISE EXCEPTION 'BR-12: Only approved (Borrowed/Overdue) transactions can be returned.';
   END IF;
 
   SELECT equipment_id INTO v_equipment_id
@@ -153,6 +207,7 @@ $$;
 
 -- Grant execute to authenticated users
 GRANT EXECUTE ON FUNCTION public.record_borrow(BIGINT, TEXT, TEXT, TEXT, DATE, DATE) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.approve_borrow(BIGINT) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.return_equipment(BIGINT) TO authenticated;
 
 -- ---------- Overdue helper ----------

@@ -58,6 +58,16 @@ function renderTransactions() {
       const equip = equipmentMap.get(t.equipment_id);
       const status = computedStatus(t);
       const canReturn = status === "Borrowed" || status === "Overdue"; // BR-12
+      let actionHtml = `<span class="muted text-sm">—</span>`;
+      if (status === "Pending") {
+        // Only Officers can approve a borrow request
+        actionHtml =
+          currentRole === "officer"
+            ? `<button class="btn btn-green btn-sm" onclick="approveBorrow(${t.id})">Approve</button>`
+            : `<span class="muted text-sm">Awaiting approval</span>`;
+      } else if (canReturn) {
+        actionHtml = `<button class="btn btn-green btn-sm" onclick="returnEquipment(${t.id})">Return</button>`;
+      }
       return `
       <tr>
         <td>${escapeHtml(equip ? equip.equipment_name : "—")}</td>
@@ -70,11 +80,7 @@ function renderTransactions() {
         <td>${fmtDate(t.date_returned)}</td>
         <td>${statusBadge(status)}</td>
         <td style="text-align:right;">
-          ${
-            canReturn
-              ? `<button class="btn btn-green btn-sm" onclick="returnEquipment(${t.id})">Return</button>`
-              : `<span class="muted text-sm">—</span>`
-          }
+          ${actionHtml}
         </td>
       </tr>`;
     })
@@ -137,7 +143,7 @@ document.getElementById("borrow-form").addEventListener("submit", async (e) => {
   btn.disabled = true;
   btn.textContent = "Saving...";
 
-  // Atomic RPC: checks availability (BR-03/07), inserts (BR-06), updates equipment
+  // Atomic RPC: checks availability (BR-03), inserts a PENDING request (BR-06)
   const { error } = await SUPABASE.rpc("record_borrow", {
     p_equipment_id: equipmentId,
     p_borrower_name: borrower,
@@ -161,11 +167,26 @@ document.getElementById("borrow-form").addEventListener("submit", async (e) => {
     return;
   }
 
-  showToast("Borrowing transaction saved (equipment is now Borrowed).");
+  showToast("Borrow request submitted for approval (Pending).");
   document.getElementById("borrow-card").style.display = "none";
   document.getElementById("borrow-form").reset();
   await loadData();
 });
+
+// ----- Approve a pending borrow request (Officer) -----
+async function approveBorrow(id) {
+  const txn = allTransactions.find((t) => t.id === id);
+  const equip = equipmentMap.get(txn.equipment_id);
+  if (!confirm(`Approve "${equip.equipment_name}" for ${txn.borrower_name}?`)) return;
+
+  const { error } = await SUPABASE.rpc("approve_borrow", { p_txn_id: id });
+  if (error) {
+    showToast("Approval failed: " + (error.message || error.details), "error");
+    return;
+  }
+  showToast("Borrow request approved. Equipment marked as Borrowed.");
+  await loadData();
+}
 
 // ----- Return equipment -----
 async function returnEquipment(id) {
@@ -193,5 +214,6 @@ async function returnEquipment(id) {
   const session = await requireAuth();
   if (!session) return;
   renderShell("Transactions");
+  await loadProfile();
   await loadData();
 })();

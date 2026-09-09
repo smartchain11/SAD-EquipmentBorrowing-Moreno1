@@ -1,5 +1,22 @@
 // Shared helpers: toast notifications, auth guard, nav rendering, formatting.
 
+// Current user's role (loaded from the profiles table, falls back to "borrower")
+let currentRole = "borrower";
+
+async function loadProfile() {
+  try {
+    const { data } = await SUPABASE.auth.getUser();
+    if (!data.user) return;
+    const { data: prof } = await SUPABASE.from("profiles")
+      .select("role")
+      .eq("id", data.user.id)
+      .maybeSingle();
+    if (prof && prof.role) currentRole = prof.role;
+  } catch (e) {
+    // keep default role
+  }
+}
+
 function showToast(message, type = "success") {
   const wrap = document.getElementById("toast-wrap");
   if (!wrap) return;
@@ -44,6 +61,7 @@ function computedStatus(txn) {
 function statusBadge(status) {
   const map = {
     Available: "avail",
+    Pending: "pending",
     Borrowed: "borrowed",
     Returned: "returned",
     Overdue: "overdue",

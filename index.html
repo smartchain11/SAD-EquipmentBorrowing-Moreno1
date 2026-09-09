@@ -38,6 +38,13 @@
           <input type="email" id="su-email" required autocomplete="email" placeholder="you@example.com" />
         </div>
         <div class="form-group">
+          <label for="su-role">Sign up as</label>
+          <select id="su-role" required>
+            <option value="borrower">Borrower (requests to borrow)</option>
+            <option value="officer">Officer (approves borrows)</option>
+          </select>
+        </div>
+        <div class="form-group">
           <label for="su-password">Password <span class="muted text-sm">(min 6 characters)</span></label>
           <input type="password" id="su-password" required minlength="6" autocomplete="new-password" placeholder="********" />
           <label class="show-pass"><input type="checkbox" data-toggle-pw="su-password" /> Show password</label>
