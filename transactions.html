@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Transactions | Borrowing Monitoring System</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">🔧</span> Equipment Borrowing System
+    </div>
+    <div class="topbar-right">
+      <span class="user-chip" id="user-name"></span>
+      <button class="btn btn-outline btn-sm" onclick="logout()">Logout</button>
+    </div>
+  </header>
+
+  <nav class="nav" id="main-nav"></nav>
+
+  <main>
+    <div class="page-head">
+      <h2>Borrowing Transactions</h2>
+      <div class="actions">
+        <button class="btn" id="btn-borrow">+ Record Borrowing</button>
+      </div>
+    </div>
+
+    <!-- Borrow form -->
+    <div class="card" id="borrow-card" style="display:none;">
+      <h3>New Borrowing Transaction</h3>
+      <form id="borrow-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="borrower-name">Borrower Name *</label>
+            <input type="text" id="borrower-name" required maxlength="100" placeholder="Juan Dela Cruz" />
+            <div class="error-text" id="err-borrower">Borrower name must be provided.</div>
+          </div>
+          <div class="form-group">
+            <label for="borrower-type">Borrower Type *</label>
+            <select id="borrower-type" required>
+              <option value="Student">Student</option>
+              <option value="Faculty">Faculty</option>
+              <option value="Staff">Staff</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="department">Department *</label>
+            <input type="text" id="department" required maxlength="80" placeholder="College of ICT" />
+          </div>
+          <div class="form-group">
+            <label for="borrow-equipment">Equipment * (available only)</label>
+            <select id="borrow-equipment" required></select>
+            <div class="error-text" id="err-equipment">Only available equipment may be borrowed.</div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="date-borrowed">Date Borrowed *</label>
+            <input type="date" id="date-borrowed" required />
+          </div>
+          <div class="form-group">
+            <label for="due-date">Due Date *</label>
+            <input type="date" id="due-date" required />
+            <div class="error-text" id="err-due">Due date cannot be earlier than the borrowing date.</div>
+          </div>
+        </div>
+        <div class="modal-actions" style="margin-top:4px;">
+          <button type="button" class="btn btn-outline" id="btn-cancel-borrow">Cancel</button>
+          <button type="submit" class="btn" id="btn-save-borrow">Save Transaction</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="card">
+      <div class="toolbar">
+        <input type="search" id="search-input" placeholder="Search borrower, equipment, or code..." />
+        <select id="filter-status">
+          <option value="">Status: All</option>
+          <option value="Borrowed">Borrowed</option>
+          <option value="Returned">Returned</option>
+          <option value="Overdue">Overdue</option>
+        </select>
+      </div>
+      <div id="loading" class="loading"><div class="spinner"></div>Loading transactions...</div>
+      <div class="table-wrap" id="table-wrap" style="display:none;">
+        <table>
+          <thead>
+            <tr>
+              <th>Equipment</th>
+              <th>Code</th>
+              <th>Borrower</th>
+              <th>Type</th>
+              <th>Dept</th>
+              <th>Borrowed</th>
+              <th>Due</th>
+              <th>Returned</th>
+              <th>Status</th>
+              <th style="text-align:right;">Action</th>
+            </tr>
+          </thead>
+          <tbody id="transactions-tbody"></tbody>
+        </table>
+      </div>
+      <div id="empty-state" class="empty" style="display:none;">No transactions found.</div>
+    </div>
+  </main>
+
+  <div id="toast-wrap"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@3"></script>
+  <script src="js/config.js"></script>
+  <script src="js/common.js"></script>
+  <script src="js/transactions.js"></script>
+</body>
+</html>

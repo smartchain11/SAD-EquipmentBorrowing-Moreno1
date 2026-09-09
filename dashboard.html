@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard | Borrowing Monitoring System</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">🔧</span> Equipment Borrowing System
+    </div>
+    <div class="topbar-right">
+      <span class="user-chip" id="user-name"></span>
+      <button class="btn btn-outline btn-sm" onclick="logout()">Logout</button>
+    </div>
+  </header>
+
+  <nav class="nav" id="main-nav"></nav>
+
+  <main>
+    <div class="page-head">
+      <h2>Equipment Borrowing Dashboard</h2>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card blue">
+        <div class="label">Total Equipment</div>
+        <div class="value" id="stat-total">0</div>
+      </div>
+      <div class="stat-card green">
+        <div class="label">Available</div>
+        <div class="value" id="stat-available">0</div>
+      </div>
+      <div class="stat-card amber">
+        <div class="label">Borrowed</div>
+        <div class="value" id="stat-borrowed">0</div>
+      </div>
+      <div class="stat-card" style="border-color:#dbeafe;">
+        <div class="label">Returned Transactions</div>
+        <div class="value" id="stat-returned">0</div>
+      </div>
+      <div class="stat-card red">
+        <div class="label">Overdue</div>
+        <div class="value" id="stat-overdue">0</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Recently Borrowed</h3>
+      <div id="loading" class="loading"><div class="spinner"></div>Loading dashboard...</div>
+      <div class="table-wrap" id="table-wrap" style="display:none;">
+        <table>
+          <thead>
+            <tr>
+              <th>Equipment</th>
+              <th>Code</th>
+              <th>Borrower</th>
+              <th>Borrowed</th>
+              <th>Due</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="recent-tbody"></tbody>
+        </table>
+      </div>
+      <div id="empty-state" class="empty" style="display:none;">No borrowing transactions yet.</div>
+    </div>
+  </main>
+
+  <div id="toast-wrap"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@3"></script>
+  <script src="js/config.js"></script>
+  <script src="js/common.js"></script>
+  <script src="js/dashboard.js"></script>
+</body>
+</html>

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Equipment | Borrowing Monitoring System</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">🔧</span> Equipment Borrowing System
+    </div>
+    <div class="topbar-right">
+      <span class="user-chip" id="user-name"></span>
+      <button class="btn btn-outline btn-sm" onclick="logout()">Logout</button>
+    </div>
+  </header>
+
+  <nav class="nav" id="main-nav"></nav>
+
+  <main>
+    <div class="page-head">
+      <h2>Equipment</h2>
+      <div class="actions">
+        <button class="btn" id="btn-add">+ Add Equipment</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="toolbar">
+        <input type="search" id="search-input" placeholder="Search by name or asset code..." />
+        <select id="filter-availability">
+          <option value="">Availability: All</option>
+          <option value="Available">Available</option>
+          <option value="Borrowed">Borrowed</option>
+        </select>
+        <select id="filter-category">
+          <option value="">Category: All</option>
+        </select>
+      </div>
+      <div id="loading" class="loading"><div class="spinner"></div>Loading equipment...</div>
+      <div class="table-wrap" id="table-wrap" style="display:none;">
+        <table>
+          <thead>
+            <tr>
+              <th>Code</th>
+              <th>Equipment</th>
+              <th>Category</th>
+              <th>Condition</th>
+              <th>Availability</th>
+              <th style="text-align:right;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="equipment-tbody"></tbody>
+        </table>
+      </div>
+      <div id="empty-state" class="empty" style="display:none;">No equipment found.</div>
+    </div>
+  </main>
+
+  <!-- Add / Edit modal -->
+  <div class="modal-backdrop" id="modal-backdrop">
+    <div class="modal">
+      <h3 id="modal-title">Add Equipment</h3>
+      <form id="equipment-form">
+        <input type="hidden" id="equipment-id" />
+        <div class="form-group">
+          <label for="equipment-name">Equipment Name *</label>
+          <input type="text" id="equipment-name" required maxlength="100" placeholder="Epson Projector" />
+          <div class="error-text" id="err-name">Equipment name cannot be empty.</div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="category">Category *</label>
+            <input type="text" id="category" required maxlength="50" placeholder="Projector" />
+          </div>
+          <div class="form-group">
+            <label for="asset-code">Asset Code *</label>
+            <input type="text" id="asset-code" required maxlength="20" placeholder="PROJ-001" />
+            <div class="error-text" id="err-code">Asset code must be unique.</div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="condition">Condition</label>
+            <select id="condition">
+              <option value="Good">Good</option>
+              <option value="Fair">Fair</option>
+              <option value="For Repair">For Repair</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="availability">Availability</label>
+            <select id="availability">
+              <option value="Available">Available</option>
+              <option value="Borrowed">Borrowed</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-outline" id="btn-cancel">Cancel</button>
+          <button type="submit" class="btn" id="btn-save">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="toast-wrap"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@3"></script>
+  <script src="js/config.js"></script>
+  <script src="js/common.js"></script>
+  <script src="js/equipment.js"></script>
+</body>
+</html>
