@@ -6,6 +6,13 @@ const loginForm = document.getElementById("login-form");
 const signupForm = document.getElementById("signup-form");
 const note = document.getElementById("form-note");
 
+document.querySelectorAll("[data-toggle-pw]").forEach((cb) => {
+  cb.addEventListener("change", () => {
+    const input = document.getElementById(cb.dataset.togglePw);
+    if (input) input.type = cb.checked ? "text" : "password";
+  });
+});
+
 function switchTab(which) {
   const isLogin = which === "login";
   loginTab.classList.toggle("active", isLogin);

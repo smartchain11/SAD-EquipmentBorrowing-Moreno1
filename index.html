@@ -26,6 +26,7 @@
         <div class="form-group">
           <label for="login-password">Password</label>
           <input type="password" id="login-password" required autocomplete="current-password" placeholder="********" />
+          <label class="show-pass"><input type="checkbox" data-toggle-pw="login-password" /> Show password</label>
         </div>
         <button class="btn block" type="submit">Sign In</button>
       </form>
@@ -39,6 +40,7 @@
         <div class="form-group">
           <label for="su-password">Password <span class="muted text-sm">(min 6 characters)</span></label>
           <input type="password" id="su-password" required minlength="6" autocomplete="new-password" placeholder="********" />
+          <label class="show-pass"><input type="checkbox" data-toggle-pw="su-password" /> Show password</label>
         </div>
         <button class="btn block" type="submit">Create Account</button>
       </form>

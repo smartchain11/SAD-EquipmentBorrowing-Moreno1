@@ -117,6 +117,23 @@ a { color: var(--primary); text-decoration: none; }
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
 }
 
+.show-pass {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--muted);
+  margin-top: 6px;
+  user-select: none;
+}
+
+.show-pass input {
+  width: auto;
+  margin: 0;
+  accent-color: var(--primary);
+}
+
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;

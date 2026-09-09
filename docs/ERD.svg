@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 560" font-family="Consolas, Menlo, monospace">
+  <defs>
+    <marker id="crow" markerWidth="12" markerHeight="12" refX="3" refY="6" orient="auto">
+      <path d="M 12 6 L 3 1 L 3 11 Z" fill="none" stroke="#0f172a" stroke-width="1.5" />
+    </marker>
+  </defs>
+
+  <text x="460" y="28" text-anchor="middle" font-size="18" font-weight="bold" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">Entity Relationship Diagram (ERD)</text>
+  <text x="460" y="50" text-anchor="middle" font-size="13" fill="#64748b" font-family="Segoe UI, Arial, sans-serif">Online Equipment Borrowing and Return Monitoring System</text>
+
+  <!-- ============ equipment entity ============ -->
+  <g>
+    <rect x="60" y="170" width="320" height="294" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+    <rect x="60" y="170" width="320" height="38" rx="8" fill="#3b82f6"/>
+    <rect x="60" y="200" width="320" height="8" fill="#3b82f6"/>
+    <text x="220" y="195" text-anchor="middle" font-size="16" font-weight="bold" fill="#ffffff" font-family="Segoe UI, Arial, sans-serif">equipment</text>
+
+    <!-- attributes, row height 24 -->
+    <text x="80" y="234" font-size="13" font-weight="bold" fill="#0f172a">PK  id</text>
+    <text x="80" y="258" font-size="13" fill="#334155">    equipment_name</text>
+    <text x="80" y="282" font-size="13" fill="#334155">    category</text>
+    <text x="80" y="306" font-size="13" fill="#334155">    asset_code  (UNIQUE)</text>
+    <text x="80" y="330" font-size="13" fill="#334155">    condition</text>
+    <text x="80" y="354" font-size="13" fill="#334155">    availability</text>
+    <text x="80" y="378" font-size="13" fill="#334155">    created_at</text>
+    <line x1="80" y1="402" x2="360" y2="402" stroke="#e2e8f0"/>
+    <text x="80" y="424" font-size="11" fill="#64748b">Good | Fair | For Repair</text>
+    <text x="80" y="442" font-size="11" fill="#64748b">Available | Borrowed</text>
+  </g>
+
+  <!-- ============ borrow_transactions entity ============ -->
+  <g>
+    <rect x="540" y="120" width="330" height="410" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+    <rect x="540" y="120" width="330" height="38" rx="8" fill="#f59e0b"/>
+    <rect x="540" y="150" width="330" height="8" fill="#f59e0b"/>
+    <text x="705" y="145" text-anchor="middle" font-size="16" font-weight="bold" fill="#ffffff" font-family="Segoe UI, Arial, sans-serif">borrow_transactions</text>
+
+    <text x="560" y="184" font-size="13" font-weight="bold" fill="#0f172a">PK  id</text>
+    <text x="560" y="208" font-size="13" font-weight="bold" fill="#0f172a">FK  equipment_id</text>
+    <text x="560" y="232" font-size="13" fill="#334155">    borrower_name</text>
+    <text x="560" y="256" font-size="13" fill="#334155">    borrower_type</text>
+    <text x="560" y="280" font-size="13" fill="#334155">    department</text>
+    <text x="560" y="304" font-size="13" fill="#334155">    date_borrowed</text>
+    <text x="560" y="328" font-size="13" fill="#334155">    due_date</text>
+    <text x="560" y="352" font-size="13" fill="#334155">    date_returned</text>
+    <text x="560" y="376" font-size="13" fill="#334155">    status</text>
+    <text x="560" y="400" font-size="13" fill="#334155">    user_id  (auth.users)</text>
+    <text x="560" y="424" font-size="13" fill="#334155">    created_at</text>
+    <line x1="560" y1="446" x2="850" y2="446" stroke="#e2e8f0"/>
+    <text x="560" y="468" font-size="11" fill="#64748b">Student | Faculty | Staff</text>
+    <text x="560" y="486" font-size="11" fill="#64748b">Borrowed | Returned | Overdue</text>
+  </g>
+
+  <!-- Relationship line: equipment 1 .. N borrow_transactions -->
+  <line x1="380" y1="250" x2="480" y2="250" stroke="#0f172a" stroke-width="2"/>
+  <line x1="480" y1="250" x2="540" y2="250" stroke="#0f172a" stroke-width="2"/>
+  <!-- crow's foot on transactions side (N) -->
+  <path d="M 540 240 L 556 250 L 540 260" fill="none" stroke="#0f172a" stroke-width="2"/>
+  <path d="M 528 240 L 544 250 L 528 260" fill="none" stroke="#0f172a" stroke-width="2"/>
+
+  <text x="405" y="235" text-anchor="middle" font-size="15" font-weight="bold" fill="#0f172a">1</text>
+  <text x="500" y="235" text-anchor="middle" font-size="15" font-weight="bold" fill="#0f172a">N</text>
+
+  <rect x="405" y="305" width="110" height="24" rx="12" fill="#e2e8f0"/>
+  <text x="460" y="321" text-anchor="middle" font-size="12" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">is borrowed in</text>
+
+  <!-- Legend -->
+  <g>
+    <text x="80" y="80" font-size="13" font-weight="bold" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">Relationships:</text>
+    <rect x="260" y="64" width="18" height="18" fill="none" stroke="#0f172a" stroke-width="2"/>
+    <path d="M 290 73 L 306 73 M 306 73 L 306 73" stroke="#0f172a" stroke-width="2"/>
+    <path d="M 306 65 L 322 73 L 306 81" fill="none" stroke="#0f172a" stroke-width="2"/>
+    <text x="338" y="78" font-size="12" fill="#334155" font-family="Segoe UI, Arial, sans-serif">1 equipment &lt;--&gt; N borrow_transactions</text>
+  </g>
+
+  <text x="460" y="530" text-anchor="middle" font-size="12" fill="#64748b" font-family="Segoe UI, Arial, sans-serif">One equipment item may appear in multiple borrowing transactions over time, but each transaction refers to one equipment item.</text>
+  <text x="460" y="548" text-anchor="middle" font-size="12" fill="#64748b" font-family="Segoe UI, Arial, sans-serif">Each transaction is recorded by one authenticated user (user_id references auth.users).</text>
+</svg>
