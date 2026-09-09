@@ -218,12 +218,21 @@ function closeRequestModal() {
   document.getElementById("request-backdrop").classList.remove("open");
 }
 
-document.getElementById("btn-cancel-request").addEventListener("click", closeRequestModal);
-document.getElementById("request-backdrop").addEventListener("click", (e) => {
-  if (e.target === e.currentTarget) closeRequestModal();
-});
+const cancelReqBtn = document.getElementById("btn-cancel-request");
+if (cancelReqBtn) {
+  cancelReqBtn.addEventListener("click", closeRequestModal);
+}
 
-document.getElementById("request-form").addEventListener("submit", async (e) => {
+const requestForm = document.getElementById("request-form");
+if (requestForm) {
+  const requestBackdrop = document.getElementById("request-backdrop");
+  if (requestBackdrop) {
+    requestBackdrop.addEventListener("click", (e) => {
+      if (e.target === e.currentTarget) closeRequestModal();
+    });
+  }
+
+  requestForm.addEventListener("submit", async (e) => {
   e.preventDefault();
 
   const name = document.getElementById("req-borrower-name").value.trim();
@@ -261,7 +270,8 @@ document.getElementById("request-form").addEventListener("submit", async (e) => 
   showToast("Request submitted to the admin for approval.");
   closeRequestModal();
   document.getElementById("request-form").reset();
-});
+  });
+}
 
 // ----- Init -----
 (async function init() {
