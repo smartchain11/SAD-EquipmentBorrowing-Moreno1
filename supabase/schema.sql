@@ -28,8 +28,9 @@ CREATE TABLE IF NOT EXISTS public.borrow_transactions (
   date_borrowed DATE NOT NULL DEFAULT CURRENT_DATE,
   due_date      DATE NOT NULL,
   date_returned DATE,
+  claim_date    TIMESTAMPTZ,
   status        TEXT NOT NULL DEFAULT 'Pending'
-                CHECK (status IN ('Pending', 'Borrowed', 'Returned', 'Overdue')),
+                CHECK (status IN ('Pending', 'Borrowed', 'Returned', 'Overdue', 'Rejected')),
   user_id       UUID REFERENCES auth.users(id) ON DELETE SET NULL,
   created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   CONSTRAINT due_date_not_before_borrow CHECK (due_date >= date_borrowed)
@@ -42,11 +43,14 @@ CREATE INDEX IF NOT EXISTS idx_txn_borrower     ON public.borrow_transactions (b
 CREATE INDEX IF NOT EXISTS idx_txn_status       ON public.borrow_transactions (status);
 CREATE INDEX IF NOT EXISTS idx_txn_equipment    ON public.borrow_transactions (equipment_id);
 
--- Allow the Pending status even when the table already exists
+-- Allow the Pending / Rejected statuses even when the table already exists
 ALTER TABLE public.borrow_transactions DROP CONSTRAINT IF EXISTS borrow_transactions_status_check;
 ALTER TABLE public.borrow_transactions
   ADD CONSTRAINT borrow_transactions_status_check
-  CHECK (status IN ('Pending', 'Borrowed', 'Returned', 'Overdue'));
+  CHECK (status IN ('Pending', 'Borrowed', 'Returned', 'Overdue', 'Rejected'));
+
+-- Claimed date+time column (set when an Officer approves/claimes the item)
+ALTER TABLE public.borrow_transactions ADD COLUMN IF NOT EXISTS claim_date TIMESTAMPTZ;
 
 -- ---------- ROW LEVEL SECURITY ----------
 ALTER TABLE public.equipment           ENABLE ROW LEVEL SECURITY;
@@ -151,10 +155,41 @@ BEGIN
   SELECT equipment_id INTO v_equipment_id
   FROM public.borrow_transactions WHERE id = p_txn_id;
 
-  UPDATE public.borrow_transactions SET status = 'Borrowed' WHERE id = p_txn_id;
+  UPDATE public.borrow_transactions
+     SET status = 'Borrowed', claim_date = NOW()
+   WHERE id = p_txn_id;
 
   -- BR-07: Borrowed equipment becomes unavailable.
   UPDATE public.equipment SET availability = 'Borrowed' WHERE id = v_equipment_id;
+END;
+$$;
+
+-- ---------- REJECT borrowing request (Officer) ----------
+CREATE OR REPLACE FUNCTION public.reject_borrow(p_txn_id BIGINT)
+RETURNS VOID
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  -- Role check: only Officers may reject requests
+  IF NOT EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE id = auth.uid() AND role = 'officer'
+  ) THEN
+    RAISE EXCEPTION 'Only officers can reject borrow requests.';
+  END IF;
+
+  -- Only a Pending request can be rejected
+  IF NOT EXISTS (
+    SELECT 1 FROM public.borrow_transactions
+    WHERE id = p_txn_id AND status = 'Pending'
+  ) THEN
+    RAISE EXCEPTION 'Only pending borrow requests can be rejected.';
+  END IF;
+
+  -- Equipment was never marked Borrowed; only the status changes
+  UPDATE public.borrow_transactions SET status = 'Rejected' WHERE id = p_txn_id;
 END;
 $$;
 
@@ -233,6 +268,7 @@ $$;
 -- Grant execute to authenticated users
 GRANT EXECUTE ON FUNCTION public.record_borrow(BIGINT, TEXT, TEXT, TEXT, DATE, DATE) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.approve_borrow(BIGINT) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.reject_borrow(BIGINT) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.return_equipment(BIGINT) TO authenticated;
 
 -- ---------- Overdue helper ----------

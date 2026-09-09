@@ -44,10 +44,15 @@ function renderEquipment() {
   }
 
   const canManage = currentRole === "officer";
-  const actionsCell = canManage
-    ? `<button class="btn btn-outline btn-sm" onclick="editEquipment(${e.id})">Edit</button>
-       <button class="btn btn-red btn-sm" onclick="deleteEquipment(${e.id})">Delete</button>`
-    : `<span class="muted text-sm">—</span>`;
+  let actionsCell;
+  if (canManage) {
+    actionsCell = `<button class="btn btn-outline btn-sm" onclick="editEquipment(${e.id})">Edit</button>
+       <button class="btn btn-red btn-sm" onclick="deleteEquipment(${e.id})">Delete</button>`;
+  } else if (e.availability === "Available") {
+    actionsCell = `<button class="btn btn-sm" onclick="openRequestModal(${e.id})">Request</button>`;
+  } else {
+    actionsCell = `<span class="muted text-sm">—</span>`;
+  }
 
   document.getElementById("table-wrap").style.display = "block";
   tbody.innerHTML = rows
@@ -191,6 +196,71 @@ async function deleteEquipment(id) {
 // ----- Search / filter events -----
 ["search-input", "filter-availability", "filter-category"].forEach((id) => {
   document.getElementById(id).addEventListener("input", renderEquipment);
+});
+
+// ----- Request to borrow modal -----
+function openRequestModal(id) {
+  const rec = allEquipment.find((e) => e.id === id);
+  if (!rec) return;
+  document.getElementById("req-equipment-id").value = rec.id;
+  document.getElementById("request-asset").textContent = `${rec.asset_code} - ${rec.equipment_name}`;
+  document.getElementById("req-borrower-name").value = "";
+  document.getElementById("req-borrower-type").value = "Student";
+  document.getElementById("req-dept").value = "";
+  document.getElementById("req-date-borrowed").value = today();
+  document.getElementById("req-due-date").value = "";
+  document.getElementById("err-req-name").style.display = "none";
+  document.getElementById("err-req-due").style.display = "none";
+  document.getElementById("request-backdrop").classList.add("open");
+}
+
+function closeRequestModal() {
+  document.getElementById("request-backdrop").classList.remove("open");
+}
+
+document.getElementById("btn-cancel-request").addEventListener("click", closeRequestModal);
+document.getElementById("request-backdrop").addEventListener("click", (e) => {
+  if (e.target === e.currentTarget) closeRequestModal();
+});
+
+document.getElementById("request-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const name = document.getElementById("req-borrower-name").value.trim();
+  const equipmentId = Number(document.getElementById("req-equipment-id").value);
+  const dateBorrowed = document.getElementById("req-date-borrowed").value;
+  const dueDate = document.getElementById("req-due-date").value;
+
+  document.getElementById("err-req-name").style.display = name ? "none" : "block";
+  if (!name) return;
+
+  document.getElementById("err-req-due").style.display =
+    dueDate && dueDate < dateBorrowed ? "block" : "none";
+  if (dueDate && dueDate < dateBorrowed) return;
+
+  const btn = document.getElementById("btn-submit-request");
+  btn.disabled = true;
+  btn.textContent = "Submitting...";
+
+  const { error } = await SUPABASE.rpc("record_borrow", {
+    p_equipment_id: equipmentId,
+    p_borrower_name: name,
+    p_borrower_type: document.getElementById("req-borrower-type").value,
+    p_department: document.getElementById("req-dept").value.trim(),
+    p_date_borrowed: dateBorrowed,
+    p_due_date: dueDate,
+  });
+
+  btn.disabled = false;
+  btn.textContent = "Submit Request";
+
+  if (error) {
+    showToast("Request failed: " + (error.message || error.details), "error");
+    return;
+  }
+  showToast("Request submitted to the admin for approval.");
+  closeRequestModal();
+  document.getElementById("request-form").reset();
 });
 
 // ----- Init -----

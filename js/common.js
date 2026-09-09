@@ -49,6 +49,19 @@ function today() {
   return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
 }
 
+function fmtDateTime(value) {
+  if (!value) return "—";
+  const d = new Date(value);
+  if (isNaN(d)) return value;
+  return d.toLocaleString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
 // Overdue business rule (BR-09):
 // IF current date > due date AND status is not Returned THEN status = Overdue
 function computedStatus(txn) {
@@ -92,10 +105,13 @@ async function logout() {
 
 // Render topbar with user name + nav with active link.
 async function renderShell(active = "") {
+  await loadProfile();
   const { data } = await SUPABASE.auth.getUser();
   const user = data.user;
   if (user) {
-    document.getElementById("user-name").textContent = user.email;
+    const roleLabel = currentRole === "officer" ? "Officer" : "Borrower";
+    document.getElementById("user-name").textContent =
+      user.email + " (" + roleLabel + ")";
   }
   const nav = document.getElementById("main-nav");
   const links = [

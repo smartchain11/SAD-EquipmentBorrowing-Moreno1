@@ -60,10 +60,11 @@ function renderTransactions() {
       const canReturn = status === "Borrowed" || status === "Overdue"; // BR-12
       let actionHtml = `<span class="muted text-sm">—</span>`;
       if (status === "Pending") {
-        // Only Officers can approve a borrow request
+        // Only Officers can approve or reject a request
         actionHtml =
           currentRole === "officer"
-            ? `<button class="btn btn-green btn-sm" onclick="approveBorrow(${t.id})">Approve</button>`
+            ? `<button class="btn btn-green btn-sm" onclick="approveBorrow(${t.id})">Approve</button>
+               <button class="btn btn-red btn-sm" onclick="rejectBorrow(${t.id})">Reject</button>`
             : `<span class="muted text-sm">Awaiting approval</span>`;
       } else if (canReturn) {
         actionHtml = `<button class="btn btn-green btn-sm" onclick="returnEquipment(${t.id})">Return</button>`;
@@ -77,6 +78,7 @@ function renderTransactions() {
         <td>${escapeHtml(t.department)}</td>
         <td>${fmtDate(t.date_borrowed)}</td>
         <td>${fmtDate(t.due_date)}</td>
+        <td>${fmtDateTime(t.claim_date)}</td>
         <td>${fmtDate(t.date_returned)}</td>
         <td>${statusBadge(status)}</td>
         <td style="text-align:right;">
@@ -185,6 +187,21 @@ async function approveBorrow(id) {
     return;
   }
   showToast("Borrow request approved. Equipment marked as Borrowed.");
+  await loadData();
+}
+
+// ----- Reject a pending borrow request (Officer) -----
+async function rejectBorrow(id) {
+  const txn = allTransactions.find((t) => t.id === id);
+  const equip = equipmentMap.get(txn.equipment_id) || {};
+  if (!confirm(`Reject the request for "${equip.equipment_name || ""}" by ${txn.borrower_name}?`)) return;
+
+  const { error } = await SUPABASE.rpc("reject_borrow", { p_txn_id: id });
+  if (error) {
+    showToast("Reject failed: " + (error.message || error.details), "error");
+    return;
+  }
+  showToast("Borrow request rejected.");
   await loadData();
 }
 
