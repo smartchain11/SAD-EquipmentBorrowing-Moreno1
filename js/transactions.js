@@ -268,5 +268,15 @@ async function returnEquipment(id) {
   if (!session) return;
   renderShell("Transactions");
   await loadProfile();
+
+  // Only Officers and Administrators can directly record a borrowing transaction.
+  // Borrowers must use the "Request" button on the Equipment page instead.
+  if (isBorrower()) {
+    const btn = document.getElementById("btn-borrow");
+    if (btn) btn.style.display = "none";
+    const card = document.getElementById("borrow-card");
+    if (card) card.style.display = "none";
+  }
+
   await loadData();
 })();
