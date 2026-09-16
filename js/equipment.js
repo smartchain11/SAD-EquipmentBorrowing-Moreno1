@@ -46,7 +46,7 @@ function renderEquipment() {
   document.getElementById("table-wrap").style.display = "block";
   tbody.innerHTML = rows
     .map((e) => {
-      const canManage = currentRole === "officer";
+      const canManage = isAdmin() || isOfficer();
       let actionsCell;
       if (canManage) {
         actionsCell = `<button class="btn btn-outline btn-sm" onclick="editEquipment(${e.id})">Edit</button>
@@ -113,8 +113,8 @@ function editEquipment(id) {
 async function saveEquipment(e) {
   e.preventDefault();
 
-  if (currentRole !== "officer") {
-    showToast("Only officers can add or edit equipment.", "error");
+  if (!isAdmin() && !isOfficer()) {
+    showToast("Only officers or administrators can add or edit equipment.", "error");
     return;
   }
 
@@ -170,8 +170,8 @@ async function saveEquipment(e) {
 document.getElementById("equipment-form").addEventListener("submit", saveEquipment);
 
 async function deleteEquipment(id) {
-  if (currentRole !== "officer") {
-    showToast("Only officers can delete equipment.", "error");
+  if (!isAdmin() && !isOfficer()) {
+    showToast("Only officers or administrators can delete equipment.", "error");
     return;
   }
   const rec = allEquipment.find((e) => e.id === id);
@@ -278,7 +278,7 @@ if (requestForm) {
   if (!session) return;
   renderShell("Equipment");
   await loadProfile();
-  if (currentRole !== "officer") {
+  if (!isAdmin() && !isOfficer()) {
     const btn = document.getElementById("btn-add");
     if (btn) btn.style.display = "none";
   }

@@ -195,7 +195,7 @@ async function approveBorrow(id) {
     showToast("Approval failed: " + (error.message || error.details), "error");
     return;
   }
-  showToast("Borrow request approved. Equipment marked as Borrowed.");
+  showToast("Request approved. Ready for claim.");
   await loadData();
 }
 

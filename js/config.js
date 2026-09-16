@@ -8,8 +8,8 @@
 //  3. Paste them below (between the quotes)
 // ============================================================
 
-const SUPABASE_URL = "https://xbngjebfemyjminokllk.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_tWEry3NJKmK_2spHZWQ73g_ZncKnqno";
+const SUPABASE_URL = "https://goghypbfnxochcuftjne.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_wizUH1y0NTnU3do1UBbPlg_9je7Nzxy";
 
 // Do not modify below this line
 const SUPABASE = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);

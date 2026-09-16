@@ -19,8 +19,8 @@
   <line x1="45" y1="300" x2="105" y2="300" stroke="#0f172a" stroke-width="2"/>
   <line x1="75" y1="322" x2="55" y2="360" stroke="#0f172a" stroke-width="2"/>
   <line x1="75" y1="322" x2="95" y2="360" stroke="#0f172a" stroke-width="2"/>
-  <text x="75" y="390" text-anchor="middle" font-size="13" font-weight="bold" fill="#0f172a">System User /</text>
-  <text x="75" y="407" text-anchor="middle" font-size="13" font-weight="bold" fill="#0f172a">Equipment Custodian</text>
+  <text x="75" y="390" text-anchor="middle" font-size="13" font-weight="bold" fill="#0f172a">Administrator /</text>
+  <text x="75" y="407" text-anchor="middle" font-size="13" font-weight="bold" fill="#0f172a">Officer</text>
 
   <ellipse cx="75" cy="480" rx="34" ry="22" fill="#ffffff" stroke="#64748b" stroke-width="2" stroke-dasharray="6 3"/>
   <line x1="75" y1="502" x2="75" y2="542" stroke="#64748b" stroke-width="2" stroke-dasharray="6 3"/>
@@ -71,7 +71,10 @@
   <text x="640" y="355" text-anchor="middle" font-size="13" fill="#1e3a8a">Filter Transactions</text>
 
   <ellipse cx="640" cy="400" rx="125" ry="18" fill="#ffffff" stroke="#2563eb" stroke-width="1.5"/>
-  <text x="640" y="405" text-anchor="middle" font-size="13" fill="#1e3a8a">Logout</text>
+  <text x="640" y="405" text-anchor="middle" font-size="13" fill="#1e3a8a">View Audit Logs (Admin)</text>
+
+  <ellipse cx="640" cy="450" rx="125" ry="18" fill="#ffffff" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="640" y="455" text-anchor="middle" font-size="13" fill="#1e3a8a">Logout</text>
 
   <!-- Associations: System User to left-column use cases -->
   <line x1="156" y1="258" x2="195" y2="152" stroke="#334155" stroke-width="1.4"/>
@@ -89,6 +92,7 @@
   <path d="M 130 302 C 210 300, 500 298, 512 298" fill="none" stroke="#334155" stroke-width="1.4"/>
   <path d="M 133 306 C 220 340, 490 348, 512 348" fill="none" stroke="#334155" stroke-width="1.4"/>
   <path d="M 136 308 C 240 380, 470 398, 505 398" fill="none" stroke="#334155" stroke-width="1.4"/>
+  <path d="M 138 310 C 260 420, 470 448, 505 448" fill="none" stroke="#334155" stroke-width="1.4"/>
 
   <!-- include relationships -->
   <line x1="415" y1="150" x2="455" y2="150" stroke="#9333ea" stroke-width="1.2" marker-end="url(#arrow)"/>

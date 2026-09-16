@@ -333,6 +333,8 @@ tbody tr:last-child td { border-bottom: none; }
 .badge.borrowed { background: #fef3c7; color: #92400e; }
 .badge.overdue { background: #fee2e2; color: #991b1b; }
 .badge.pending { background: #e0e7ff; color: #3730a3; }
+.badge.teal { background: #ccfbf1; color: #065f46; }
+.badge.rejected { background: #fce7f3; color: #9d174d; }
 .badge.default { background: #e2e8f0; color: #334155; }
 
 .empty {
